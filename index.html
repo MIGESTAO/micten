@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Empréstimos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMf7pXrZpztI/PBq38e1JZMJc5zp5YYaKp0BXG9" crossorigin="anonymous">
+
+
+  <style>
+body {
+  background: 
+    url('img/mc.webp') no-repeat center center fixed, /* Imagem de fundo centralizada e fixa */
+    linear-gradient(135deg, #007bff, #6610f2);
+  background-color: #f8f9fa; /* Cor de fundo suave */
+  font-family: 'Arial', sans-serif; /* Fonte legível */
+  margin: 0; /* Remove margens padrão do body */
+  padding: 0; /* Remove preenchimento padrão do body */
+  width: 100%; /* Define a largura do body como 100% */
+  height: 100vh; /* Define a altura do body como 100% da altura da janela */
+}
+
+.container {
+  max-width: 800px; /* Limite a largura do container */
+  margin: 0 auto; /* Centraliza o container */
+  padding: 20px;
+  background-color: #fff; /* Fundo branco para o container */
+  border-radius: 8px; /* Bordas arredondadas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Outros estilos... */
+
+h1 {
+  color: #007bff; /* Cor do título */
+  text-align: center; /* Centraliza o título */
+  margin-bottom: 20px; /* Espaço abaixo do título */
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.btn-primary {
+  background-color: #007bff; /* Cor do botão primário */
+  border-color: #007bff;
+  transition: background-color 0.3s ease; /* Animação ao passar o mouse */
+}
+
+.btn-primary:hover {
+  background-color: #0056b3; /* Cor do botão ao passar o mouse */
+  border-color: #0056b3;
+}
+
+.card {
+  margin-bottom: 20px; /* Espaço maior entre os cartões */
+  border: 1px solid #e0e0e0; /* Borda sutil para o cartão */
+  border-radius: 8px; /* Bordas arredondadas */
+  transition: transform 0.3s ease; /* Animação de transformação */
+  padding: 15px; /* Adiciona um pouco de padding interno */
+}
+
+.card:hover {
+  transform: translateY(-5px); /* Eleva o cartão ao passar o mouse */
+}
+
+.card-body {
+  padding: 15px; /* Reduz o padding dentro do cartão */
+}
+
+.cliente-info p {
+  margin: 5px 0; /* Espaçamento entre parágrafos */
+}
+
+.cliente-historico {
+  margin-top: 10px; /* Reduz a margem superior do histórico */
+  background-color: #f8f9fa; /* Fundo cinza claro para histórico */
+  padding: 8px; /* Reduz o padding do histórico */
+  border-radius: 5px; /* Bordas arredondadas para histórico */
+}
+
+.cliente-acoes button {
+  margin-right: 5px; /* Espaçamento entre botões */
+}
+
+.valor-divida {
+  color: #dc3545; /* Cor vermelha para dívidas */
+  font-weight: bold; /* Destaque para dívidas */
+}
+
+.valor-juros {
+  color: #ffc107; /* Cor amarela para juros */
+  font-weight: bold; /* Destaque para juros */
+}
+
+.valor-reembolso {
+  color: #28a745; /* Cor verde para reembolsos */
+  font-weight: bold; /* Destaque para reembolsos */
+}
+
+.alert {
+  margin-top: 20px;
+  display: none; /* Mantém oculto inicialmente */
+}
+
+/* Animações ao carregar */
+.card {
+  opacity: 0; /* Começa invisível */
+  transform: translateY(20px); /* Move um pouco para baixo */
+  animation: fadeIn 0.5s forwards; /* Animação de entrada */
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1; /* Torna visível */
+    transform: translateY(0); /* Retorna à posição original */
+  }
+}
+
+.carrossel {
+  position: relative;
+  width: 100%; /* Ajusta para 100% da largura do container pai */
+  height: 200px; /* Altura definida */
+  overflow: hidden;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-container {
+  display: flex;
+  transition: opacity 0.5s ease-in-out; /* Transição suave para opacidade */
+  height: 100%; /* Faz com que o container das imagens tenha 100% da altura do carrossel */
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%; /* Faz com que as imagens ocupem 100% da altura */
+  object-fit: cover; /* Ajusta o tamanho da imagem sem distorcer */
+  border-radius: 15px;
+  position: absolute; /* Para sobrepor as imagens */
+  opacity: 0; /* Todas as imagens inicialmente invisíveis */
+  transition: opacity 0.5s ease-in-out; /* Transição suave para opacidade */
+}
+
+.image-container img.active {
+  opacity: 1; /* Apenas a imagem ativa é visível */
+}
+
+.navegacao {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+}
+
+.botao {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.botao:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+#clientesContainer {
+  margin-top: 20px; /* Espaço acima do contêiner de clientes */
+}
+
+/* Animação de histórico */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cliente-historico h6 {
+  color: blue;
+  font-weight: bold;
+  margin-top: 20px;
+  font-size: 1.2rem;
+  text-shadow: 0px 0px 5px rgba(0, 191, 255, 0.7);
+  animation: slideIn 1s ease-out;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center mb-4">Sistema de Empréstimos</h1>
+
+    <!-- Formulário para adicionar cliente -->
+    <div class="mb-4">
+      <div class="input-group">
+        <input type="text" id="clienteNome" class="form-control" placeholder="Nome do Cliente">
+        <button class="btn btn-primary" onclick="adicionarCliente()">Adicionar Cliente</button>
+      </div>
+    </div>
+
+   <!-- Resumo financeiro -->
+<div id="resumoFinanceiro">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title"><i class="fas fa-chart-line"></i> Resumo Financeiro</h5>
+      <p><i class="fas fa-users"></i> Total de Clientes: <span id="totalClientes" style="color: #007bff;">0</span></p>
+      <p><i class="fas fa-money-bill-wave"></i> Total de Dívidas (sem juros): <span id="totalDividas" style="color: #dc3545;">0 MZN</span></p>
+      <p><i class="fas fa-percentage"></i> Total de Juros: <span id="totalJuros" style="color: #ffc107;">0 MZN</span></p>
+      <p><i class="fas fa-wallet"></i> Total de Reembolsos: <span id="totalReembolsos" style="color: #28a745;">0 MZN</span></p>
+      <p><i class="fas fa-piggy-bank"></i> Saldo Disponível: <span id="saldoDisponivel" style="color: #17a2b8;">0 MZN</span></p>
+    </div>
+  </div>
+</div>
+<div class="carrossel">
+  <div class="image-container">
+      <img src="img/mz.png" alt="Imagem MZ" class="active">
+      <img src="img/to.jpg" alt="Imagem TO">
+      <img src="img/mc.webp" alt="Imagem MC">
+  </div>
+  <div class="footer-bar">Texto do Rodapé</div>
+</div>
+
+
+    <!-- Lista de clientes -->
+    <div id="clientesContainer"></div>
+  </div>
+
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  
+    <!-- Configuração e Inicialização do Firebase -->
+    <script>
+      // Configuração do Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyD8XOHaLCzNLDrIlHG3em4g4gyYIKTLWpQ",
+        authDomain: "xitique-61310.firebaseapp.com",
+        databaseURL: "https://xitique-61310-default-rtdb.firebaseio.com",
+        projectId: "xitique-61310",
+        storageBucket: "xitique-61310.appspot.com",
+        messagingSenderId: "331274991404",
+        appId: "1:331274991404:web:2fec0eb082d3fe0b33de89",
+        measurementId: "G-DFDMBKW1RK"
+      };
+      
+      // Inicializar Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+  
+      // Inicializando o saldo com depósito inicial
+      const depositoInicial = 0;
+  
+      // Carregar ou inicializar o resumo financeiro no Firebase
+      function inicializarResumo() {
+        db.ref('resumo').once('value', (snapshot) => {
+          if (!snapshot.exists()) {
+            const resumoInicial = {
+              totalClientes: 0,
+              totalDividas: 0,
+              totalJuros: 0,
+              totalReembolsos: 0,
+              saldoDisponivel: depositoInicial
+            };
+            db.ref('resumo').set(resumoInicial);
+          }
+        });
+      }
+  
+      function adicionarCliente() {
+        const nome = document.getElementById('clienteNome').value;
+        if (nome === '') {
+          alert('Por favor, insira um nome');
+          return;
+        }
+  
+        const clienteId = Date.now();
+        const cliente = { 
+          id: clienteId, nome, divida: 0, juros: 0, totalPagar: 0, reembolsado: 0, status: "Sem Empréstimo", historicoEmprestimos: [], historicoReembolso: []
+        };
+  
+        db.ref('clientes/' + clienteId).set(cliente);
+        document.getElementById('clienteNome').value = '';
+        carregarClientes();
+        atualizarResumoFinanceiro();
+      }
+  
+      function carregarClientes() {
+        db.ref('clientes').once('value', (snapshot) => {
+          const clientesContainer = document.getElementById('clientesContainer');
+          clientesContainer.innerHTML = '';
+          snapshot.forEach((childSnapshot) => {
+            const cliente = childSnapshot.val();
+            const statusClass = cliente.status === "Pago" ? "text-success" : "text-danger";
+            let historicoHTML = '';
+  
+            if (cliente.historicoReembolso && cliente.historicoReembolso.length > 0) {
+              cliente.historicoReembolso.forEach((reembolso) => {
+                historicoHTML += `<p>Reembolsou: ${reembolso.valor} MZN - Restante: ${reembolso.restante} MZN - Data: ${reembolso.dataHora}</p>`;
+              });
+            }
+  
+            if (cliente.historicoEmprestimos && cliente.historicoEmprestimos.length > 0) {
+              cliente.historicoEmprestimos.forEach((emprestimo) => {
+                historicoHTML += `<p>Empréstimo de: ${emprestimo.valor} MZN - Data: ${emprestimo.dataHora}</p>`;
+              });
+            }
+  
+            clientesContainer.innerHTML += `
+            
+    <div class="cliente-separador" style="height: 10px; background-color: black; margin: 20px 0;"></div>
+
+  <div class="card mb-3" id="card-${cliente.id}" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+    <div class="card-body">
+      <h5 class="card-title text-left" style="font-size: 2.5rem; font-weight: bold;">
+        ${cliente.nome}
+      </h5>
+
+      <!-- Botões de Ação -->
+      <div class="cliente-acoes">
+        <button class="btn btn-warning" onclick="emprestar(${cliente.id})"><i class="fas fa-dollar-sign"></i> Emprestar</button>
+        <button class="btn btn-success" onclick="reembolsar(${cliente.id})"><i class="fas fa-check"></i> Reembolsar</button>
+      </div>
+    </div>
+  </div>
+
+      <!-- Seção de Status e Dívida -->
+      <div class="cliente-info">
+        <p><strong>Status:</strong> <span class="${statusClass}">${cliente.status}</span></p>
+        <p><strong>Dívida Total:</strong> <span class="valor-divida">${cliente.totalPagar.toFixed(2)} MZN</span></p>
+      </div>
+
+      <!-- Condicional para exibir Saldo Restante apenas após o primeiro reembolso -->
+      ${cliente.historicoReembolso && cliente.historicoReembolso.length > 0 ? `
+        <div class="cliente-divida">
+
+         
+        </div>
+      ` : ''}
+
+      <!-- Seção de Histórico de Reembolsos -->
+      <div class="cliente-historico">
+<h6 style="color: blue; font-weight: bold; margin-top: 20px; font-size: 1.2rem;
+    text-shadow: 0px 0px 5px rgba(0, 191, 255, 0.7); 
+    animation: slideIn 1s ease-out;">Histórico :</h6>
+
+<style>
+    /* Animação de deslizar de baixo para cima */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+
+        ${historicoHTML}
+   
+`;
+
+
+
+          });
+        });
+      }
+  
+      function emprestar(id) {
+  const valor = parseFloat(prompt('Digite o valor do empréstimo (MZN):'));
+  if (isNaN(valor) || valor <= 0) {
+    alert('Valor inválido');
+    return;
+  }
+  const jurosPercentual = parseFloat(prompt('Digite a taxa de juros (%):')) / 100;
+  if (isNaN(jurosPercentual) || jurosPercentual <= 0) {
+    alert('Taxa de juros inválida');
+    return;
+  }
+
+  // Verificar se o saldo disponível no Firebase é suficiente
+  db.ref('resumo/saldoDisponivel').once('value').then((snapshot) => {
+    let saldoDisponivel = snapshot.val();
+    const juros = valor * jurosPercentual; // Juros de acordo com o percentual inserido
+    const totalPagar = valor + juros;
+    const emprestimo = {
+      valor,
+      juros,
+      totalPagar,
+      dataHora: new Date().toLocaleString()
+    };
+
+    db.ref('clientes/' + id).once('value').then((snapshot) => {
+      const cliente = snapshot.val();
+      cliente.divida += valor;
+      cliente.juros += juros;
+      cliente.totalPagar += totalPagar;
+      cliente.status = 'Em Dívida';
+      cliente.taxaJuros = jurosPercentual; // Salvar a taxa de juros para uso posterior
+
+      if (!cliente.historicoEmprestimos) {
+        cliente.historicoEmprestimos = [];
+      }
+      cliente.historicoEmprestimos.push(emprestimo);
+
+      db.ref('clientes/' + id).set(cliente);
+      saldoDisponivel -= valor; // Atualizar saldo disponível
+      db.ref('resumo/saldoDisponivel').set(saldoDisponivel); // Salvar no Firebase
+
+      carregarClientes();
+      atualizarResumoFinanceiro();
+    });
+  });
+}
+
+function reembolsar(id) {
+  const valor = parseFloat(prompt('Digite o valor do reembolso (MZN):'));
+  if (isNaN(valor) || valor <= 0) {
+    alert('Valor inválido');
+    return;
+  }
+
+  db.ref('clientes/' + id).once('value').then((snapshot) => {
+    const cliente = snapshot.val();
+    if (valor > cliente.totalPagar) {
+      alert('Valor de reembolso maior que o total a pagar');
+      return;
+    }
+
+    // Atualizar valores após o reembolso
+    cliente.totalPagar -= valor;
+    cliente.reembolsado += valor;
+
+    // Verificar status e adicionar juros de acordo com a taxa original
+    if (cliente.totalPagar === 0) {
+      cliente.status = 'Pago';
+    } else {
+      const jurosRemanescente = cliente.totalPagar * cliente.taxaJuros;
+      cliente.totalPagar += jurosRemanescente;
+      cliente.juros += jurosRemanescente;
+    }
+
+    // Atualizar o histórico de reembolso
+    if (!cliente.historicoReembolso) {
+      cliente.historicoReembolso = [];
+    }
+    cliente.historicoReembolso.push({
+      valor,
+      restante: cliente.totalPagar,
+      dataHora: new Date().toLocaleString()
+    });
+
+    // Atualizar no banco de dados
+    db.ref('clientes/' + id).set(cliente);
+
+    // Atualizar o saldo disponível
+    db.ref('resumo/saldoDisponivel').once('value').then((snapshot) => {
+      let saldoDisponivel = snapshot.val();
+      saldoDisponivel += valor;
+      db.ref('resumo/saldoDisponivel').set(saldoDisponivel);
+    });
+
+    atualizarResumoFinanceiro();
+    carregarClientes();
+
+    // Calcula o próximo pagamento, dividindo por 12 para simular 12 parcelas
+    const proximoPagamento = cliente.totalPagar / 12;
+
+    // Atualiza saldo restante e próximo pagamento no card do cliente
+    document.getElementById(`saldoRestante-${id}`).textContent = `${cliente.totalPagar.toFixed(2)} MZN`;
+    document.getElementById(`proximoPagamento-${id}`).textContent = `${proximoPagamento.toFixed(2)} MZN`;
+  });
+}
+
+      function atualizarResumoFinanceiro() {
+        let totalDividas = 0;
+        let totalJuros = 0;
+        let totalReembolsos = 0;
+        let totalClientes = 0;
+  
+        db.ref('clientes').once('value', (snapshot) => {
+          snapshot.forEach((childSnapshot) => {
+            const cliente = childSnapshot.val();
+            totalDividas += cliente.divida;
+            totalJuros += cliente.juros;
+            totalReembolsos += cliente.reembolsado;
+            totalClientes++;
+          });
+  
+          db.ref('resumo').update({
+            totalClientes,
+            totalDividas,
+            totalJuros,
+            totalReembolsos
+          });
+  
+          document.getElementById('totalClientes').textContent = totalClientes;
+          document.getElementById('totalDividas').textContent = totalDividas + ' MZN';
+          document.getElementById('totalJuros').textContent = totalJuros + ' MZN';
+          document.getElementById('totalReembolsos').textContent = totalReembolsos + ' MZN';
+        });
+  
+        db.ref('resumo/saldoDisponivel').once('value', (snapshot) => {
+          const saldoDisponivel = snapshot.val();
+          document.getElementById('saldoDisponivel').textContent = saldoDisponivel + ' MZN';
+        });
+      }
+  
+      inicializarResumo();
+      carregarClientes();
+    </script>
+    <script>
+      let currentIndex = 0;
+      const images = document.querySelectorAll('.image-container img');
+  
+      function changeImage() {
+          images[currentIndex].classList.remove('active'); // Remove a classe 'active' da imagem atual
+          currentIndex = (currentIndex + 1) % images.length; // Incrementa o índice ou reseta
+          images[currentIndex].classList.add('active'); // Adiciona a classe 'active' à próxima imagem
+      }
+  
+      // Trocar imagem a cada 3 segundos
+      setInterval(changeImage, 3000);
+  </script>
+  </body>
+  </html>
+  
+</body>
+</html>
