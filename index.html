@@ -491,42 +491,46 @@ function reembolsar(id) {
   });
 }
 
-      function atualizarResumoFinanceiro() {
-        let totalDividas = 0;
-        let totalJuros = 0;
-        let totalReembolsos = 0;
-        let totalClientes = 0;
-  
-        db.ref('clientes').once('value', (snapshot) => {
-          snapshot.forEach((childSnapshot) => {
-            const cliente = childSnapshot.val();
-            totalDividas += cliente.divida;
-            totalJuros += cliente.juros;
-            totalReembolsos += cliente.reembolsado;
-            totalClientes++;
-          });
-  
-          db.ref('resumo').update({
-            totalClientes,
-            totalDividas,
-            totalJuros,
-            totalReembolsos
-          });
-  
-          document.getElementById('totalClientes').textContent = totalClientes;
-          document.getElementById('totalDividas').textContent = totalDividas + ' MZN';
-          document.getElementById('totalJuros').textContent = totalJuros + ' MZN';
-          document.getElementById('totalReembolsos').textContent = totalReembolsos + ' MZN';
+function atualizarResumoFinanceiro() {
+      let totalDividas = 0;
+      let totalJuros = 0;
+      let totalReembolsos = 0;
+      let totalClientes = 0;
+
+      db.ref('clientes').once('value', (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+          const cliente = childSnapshot.val();
+          totalDividas += cliente.divida;
+          totalJuros += cliente.juros;
+          totalReembolsos += cliente.reembolsado;
+          totalClientes++;
         });
-  
-        db.ref('resumo/saldoDisponivel').once('value', (snapshot) => {
-          const saldoDisponivel = snapshot.val();
-          document.getElementById('saldoDisponivel').textContent = saldoDisponivel + ' MZN';
+
+        db.ref('resumo').update({
+          totalClientes,
+          totalDividas,
+          totalJuros,
+          totalReembolsos
         });
-      }
-  
-      inicializarResumo();
+
+        document.getElementById('totalDividas').innerText = totalDividas + ' MZN';
+        document.getElementById('totalJuros').innerText = totalJuros + ' MZN';
+        document.getElementById('totalReembolsos').innerText = totalReembolsos + ' MZN';
+        document.getElementById('totalClientes').innerText = totalClientes;
+      });
+
+      // Carregar saldo disponível do Firebase
+      db.ref('resumo/saldoDisponivel').once('value', (snapshot) => {
+        const saldoDisponivel = snapshot.val() || 0;
+        document.getElementById('saldoDisponivel').innerText = saldoDisponivel + ' MZN';
+      });
+    }
+
+    window.onload = function() {
+      inicializarResumo(); // Inicializa ou carrega o resumo financeiro
       carregarClientes();
+      atualizarResumoFinanceiro();
+    }
     </script>
     <script>
       let currentIndex = 0;
